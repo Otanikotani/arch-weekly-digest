@@ -1,4 +1,4 @@
-module github.com/otanikotani/arch-tdd
+module github.com/otanikotani/arch-weekly-digest
 
 go 1.13
 
