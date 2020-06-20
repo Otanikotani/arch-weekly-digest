@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "otanikotani-arch-weekly-digest"
-    key = "filename.tfstate"
+    bucket = "otanikotani-tf"
+    key = "arch-weekly-digest.tfstate"
     region = "us-east-1"
     encrypt = true
   }
