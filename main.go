@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-//Cli options or env
+//Opts is cli options or env
 type Opts struct {
 	GoogleClientID     string `long:"google-client-id" env:"GOOGLE_CLIENT_ID"`
 	GoogleSecret       string `long:"google-secret" env:"GOOGLE_SECRET"`
