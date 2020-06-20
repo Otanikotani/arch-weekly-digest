@@ -48,11 +48,9 @@ func cli() error {
 	var wg sync.WaitGroup
 
 	wg.Add(3)
-
 	go crawler.CrawlTdds(&wg, gdocs, opts.ConfluenceUser, opts.ConfluencePassword, dropboxClient)
 	go crawler.CrawlLibrary(&wg, opts.ConfluenceUser, opts.ConfluencePassword, dropboxClient)
 	go crawler.CrawlP2s(&wg, gdrive, dropboxClient)
-
 	wg.Wait()
 
 	return nil
