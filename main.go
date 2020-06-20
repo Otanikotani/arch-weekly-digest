@@ -13,15 +13,16 @@ import (
 	"sync"
 )
 
+//Cli options or env
 type Opts struct {
-	GoogleClientId     string `long:"google-client-id" env:"GOOGLE_CLIENT_ID"`
+	GoogleClientID     string `long:"google-client-id" env:"GOOGLE_CLIENT_ID"`
 	GoogleSecret       string `long:"google-secret" env:"GOOGLE_SECRET"`
 	ConfluenceUser     string `long:"confluence-user" env:"CONFLUENCE_USER"`
 	ConfluencePassword string `long:"confluence-password" env:"CONFLUENCE_PASSWORD"`
 	DropboxToken       string `long:"dropbox-token" env:"DROPBOX_TOKEN"`
 }
 
-func handleRequest(ctx context.Context) error {
+func handleRequest(_ context.Context) error {
 	return cli()
 }
 
@@ -41,7 +42,7 @@ func cli() error {
 	if _, err := flags.Parse(&opts); err != nil {
 		return err
 	}
-	gdocs, gdrive := googleapi.NewClients(opts.GoogleClientId, opts.GoogleSecret)
+	gdocs, gdrive := googleapi.NewClients(opts.GoogleClientID, opts.GoogleSecret)
 	dropboxClient := dropy.New(dropbox.New(dropbox.NewConfig(opts.DropboxToken)))
 
 	var wg sync.WaitGroup
