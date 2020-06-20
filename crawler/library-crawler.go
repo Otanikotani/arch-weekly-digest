@@ -13,65 +13,66 @@ import (
 	"time"
 )
 
-type LibraryTDD struct {
+type libraryTDD struct {
 	Title        string
 	Body         string
 	ModifiedTime time.Time
-	Labels       []ConflContentMetadataLabel
+	Labels       []conflContentMetadataLabel
 }
 
-type ConflSearchResult struct {
-	Id    string `json:"id"`
+type conflSearchResult struct {
+	ID    string `json:"id"`
 	Type  string `json:"type"`
 	Title string `json:"title"`
 }
 
-type ConflSearchResults struct {
-	Results []ConflSearchResult `json:"results"`
+type conflSearchResults struct {
+	Results []conflSearchResult `json:"results"`
 }
 
-type ConflContentBodyStorage struct {
+type conflContentBodyStorage struct {
 	Value string `json:"value"`
 }
 
-type ConflContentBody struct {
-	Storage ConflContentBodyStorage `json:"storage"`
+type conflContentBody struct {
+	Storage conflContentBodyStorage `json:"storage"`
 }
 
-type ConflContentMetadataLabel struct {
+type conflContentMetadataLabel struct {
 	Name string `json:"name"`
 }
 
-type ConflContentMetadataLabels struct {
-	Results []ConflContentMetadataLabel `json:"results"`
+type conflContentMetadataLabels struct {
+	Results []conflContentMetadataLabel `json:"results"`
 }
 
-type ConflContentMetadata struct {
-	Labels ConflContentMetadataLabels `json:"labels"`
+type conflContentMetadata struct {
+	Labels conflContentMetadataLabels `json:"labels"`
 }
 
-type ConflContentHistoryLastUpdated struct {
+type conflContentHistoryLastUpdated struct {
 	When string `json:"when"`
 }
 
-type ConflContentHistory struct {
-	LastUpdated ConflContentHistoryLastUpdated `json:"lastUpdated"`
+type conflContentHistory struct {
+	LastUpdated conflContentHistoryLastUpdated `json:"lastUpdated"`
 }
 
-type ConflContent struct {
-	Body     ConflContentBody     `json:"body"`
-	Metadata ConflContentMetadata `json:"metadata"`
-	History  ConflContentHistory  `json:"history"`
+type conflContent struct {
+	Body     conflContentBody     `json:"body"`
+	Metadata conflContentMetadata `json:"metadata"`
+	History  conflContentHistory  `json:"history"`
 	Title    string               `json:"title"`
 }
 
+//CrawlLibrary is for crawling arch library items
 func CrawlLibrary(wg *sync.WaitGroup, user string, password string, dropboxClient *dropy.Client) {
 	defer wg.Done()
 	libraryTdds := getLibraryTdds(user, password)
 	saveLibraryTdds(libraryTdds, dropboxClient)
 }
 
-func getLibraryTdds(user string, password string) []LibraryTDD {
+func getLibraryTdds(user string, password string) []libraryTDD {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://confluence.devfactory.com/rest/api/content/search?limit=1000&maxResults=1000&cql=(parent=379894933)", nil)
 	if err != nil {
@@ -88,7 +89,7 @@ func getLibraryTdds(user string, password string) []LibraryTDD {
 		panic("Invalid response " + resp.Status)
 	}
 
-	var confluenceArticles ConflSearchResults
+	var confluenceArticles conflSearchResults
 	err = json.NewDecoder(resp.Body).Decode(&confluenceArticles)
 	if err != nil {
 		panic(err)
@@ -96,13 +97,13 @@ func getLibraryTdds(user string, password string) []LibraryTDD {
 
 	converter := md.NewConverter("", true, nil)
 
-	var libraryTDDs []LibraryTDD
+	var libraryTDDs []libraryTDD
 
 	for _, result := range confluenceArticles.Results {
-		selfUri := "https://confluence.devfactory.com/rest/api/content/" +
-			result.Id + "?expand=body.storage,history.lastUpdated,metadata.labels"
-		fmt.Printf("Self: %v\n", selfUri)
-		req, err := http.NewRequest("GET", selfUri, nil)
+		selfURI := "https://confluence.devfactory.com/rest/api/content/" +
+			result.ID + "?expand=body.storage,history.lastUpdated,metadata.labels"
+		fmt.Printf("Self: %v\n", selfURI)
+		req, err := http.NewRequest("GET", selfURI, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -118,7 +119,7 @@ func getLibraryTdds(user string, password string) []LibraryTDD {
 			panic("Invalid response " + resp.Status)
 		}
 
-		var confluenceContent ConflContent
+		var confluenceContent conflContent
 		err = json.NewDecoder(resp.Body).Decode(&confluenceContent)
 		if err != nil {
 			panic(err)
@@ -134,7 +135,7 @@ func getLibraryTdds(user string, password string) []LibraryTDD {
 			log.Fatal(err)
 		}
 
-		libraryTDDs = append(libraryTDDs, LibraryTDD{
+		libraryTDDs = append(libraryTDDs, libraryTDD{
 			Title:        confluenceContent.Title,
 			Body:         markdown,
 			ModifiedTime: modifiedTime,
@@ -150,7 +151,7 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func saveLibraryTdds(libraryTdds []LibraryTDD, dropboxClient *dropy.Client) {
+func saveLibraryTdds(libraryTdds []libraryTDD, dropboxClient *dropy.Client) {
 	for _, libraryTdd := range libraryTdds {
 		mdFileName := "/Arch/Library/" + strings.ReplaceAll(libraryTdd.Title+".md", "/", "-")
 

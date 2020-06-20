@@ -37,9 +37,10 @@ func tokenFromFile() (*oauth2.Token, error) {
 	return tok, err
 }
 
-func NewClients(clientId string, secret string) (*docs.Service, *drive.Service) {
+//NewClients create docs and drive clients
+func NewClients(clientID string, secret string) (*docs.Service, *drive.Service) {
 	config := oauth2.Config{
-		ClientID:     clientId,
+		ClientID:     clientID,
 		ClientSecret: secret,
 		RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
 		Scopes:       []string{"https://www.googleapis.com/auth/spreadsheets.readonly"},

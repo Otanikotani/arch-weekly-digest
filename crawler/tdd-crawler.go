@@ -12,13 +12,14 @@ import (
 	"time"
 )
 
-type TDD struct {
-	Id            string
+type tdd struct {
+	ID            string
 	Body          string
-	DocumentId    string
+	DocumentID    string
 	DocumentTitle string
 }
 
+//CrawlTdds crawls tdds in AU tickets done last week
 func CrawlTdds(wg *sync.WaitGroup, gdocs *docs.Service, user string, password string, dropboxClient *dropy.Client) {
 	defer wg.Done()
 
@@ -32,16 +33,16 @@ func CrawlTdds(wg *sync.WaitGroup, gdocs *docs.Service, user string, password st
 		log.Fatalf("Failed to find issues using jql %v. Error: %v", doneLastWeekJql, err)
 	}
 
-	var tdds []TDD
+	var tdds []tdd
 	for _, issue := range issues {
 		docLink := issue.Fields.Unknowns["customfield_26103"]
 		docLinkStr := fmt.Sprintf("%v", docLink)
-		docId := strings.Split(strings.ReplaceAll(docLinkStr, "https://docs.google.com/document/d/", ""), "/")[0]
+		docID := strings.Split(strings.ReplaceAll(docLinkStr, "https://docs.google.com/document/d/", ""), "/")[0]
 
-		doc, err := gdocs.Documents.Get(docId).Do()
+		doc, err := gdocs.Documents.Get(docID).Do()
 
 		if err != nil {
-			log.Printf("Unable to load Doc %v: %v", docId, err)
+			log.Printf("Unable to load Doc %v: %v", docID, err)
 			continue
 		}
 
@@ -60,32 +61,32 @@ func jiraClient(user string, password string) (*jira.Client, error) {
 	return jira.NewClient(tp.Client(), "https://jira.devfactory.com")
 }
 
-func saveNewTdds(tdds []TDD, dropboxClient *dropy.Client) {
+func saveNewTdds(tdds []tdd, dropboxClient *dropy.Client) {
 	now := time.Now().Format("Jan 02")
 	mdFileName := "/Arch/Changelog/" + now + ".md"
 
 	fmt.Println("Write " + mdFileName)
 
-	var tddsByDocument = make(map[string][]TDD)
-	for _, tdd := range tdds {
-		if strings.TrimSpace(tdd.Body) == "" || strings.Contains(tdd.Body, "What specific decisions and things to do in this componen") {
+	var tddsByDocument = make(map[string][]tdd)
+	for _, tddElement := range tdds {
+		if strings.TrimSpace(tddElement.Body) == "" || strings.Contains(tddElement.Body, "What specific decisions and things to do in this componen") {
 			continue
 		}
 
-		if arr, ok := tddsByDocument[tdd.DocumentId]; !ok {
-			var t []TDD
-			t = append(t, tdd)
-			tddsByDocument[tdd.DocumentId] = t
+		if arr, ok := tddsByDocument[tddElement.DocumentID]; !ok {
+			var t []tdd
+			t = append(t, tddElement)
+			tddsByDocument[tddElement.DocumentID] = t
 		} else {
-			arr = append(arr, tdd)
-			tddsByDocument[tdd.DocumentId] = arr
+			arr = append(arr, tddElement)
+			tddsByDocument[tddElement.DocumentID] = arr
 		}
 	}
 
 	fullMd := "# " + now + "\n"
 	for _, docTdds := range tddsByDocument {
 		if len(docTdds) != 0 {
-			fullMd += fmt.Sprintf("## [%v](%v)\n", docTdds[0].DocumentTitle, "https://docs.google.com/document/d/"+docTdds[0].DocumentId)
+			fullMd += fmt.Sprintf("## [%v](%v)\n", docTdds[0].DocumentTitle, "https://docs.google.com/document/d/"+docTdds[0].DocumentID)
 			for _, tdd := range docTdds {
 				fullMd += tdd.Body + "\n"
 				fullMd += "\n --- \n"
@@ -99,7 +100,7 @@ func saveNewTdds(tdds []TDD, dropboxClient *dropy.Client) {
 	}
 }
 
-func findTDDs(doc *docs.Document) []TDD {
+func findTDDs(doc *docs.Document) []tdd {
 	content := doc.Body.Content
 	var tables []*docs.Table
 
@@ -109,17 +110,17 @@ func findTDDs(doc *docs.Document) []TDD {
 		}
 	}
 
-	var tdds []TDD
+	var tdds []tdd
 	if tables != nil {
 		for _, table := range tables {
 			for _, row := range table.TableRows {
 				if row.TableCells != nil && len(row.TableCells) > 1 {
 					rowTitle := getContent(row.TableCells[0].Content, doc.InlineObjects)
 					if strings.HasPrefix(rowTitle, "__TDD") {
-						tdds = append(tdds, TDD{
-							Id:            strings.ReplaceAll(rowTitle, "_", ""),
+						tdds = append(tdds, tdd{
+							ID:            strings.ReplaceAll(rowTitle, "_", ""),
 							Body:          getContent(row.TableCells[1].Content, doc.InlineObjects),
-							DocumentId:    doc.DocumentId,
+							DocumentID:    doc.DocumentId,
 							DocumentTitle: doc.Title,
 						})
 					}
@@ -137,8 +138,8 @@ func getContent(content []*docs.StructuralElement, inlineObjects map[string]docs
 		if element.Paragraph != nil {
 			for _, paragraphElement := range element.Paragraph.Elements {
 				if paragraphElement.InlineObjectElement != nil {
-					inlineObjectId := paragraphElement.InlineObjectElement.InlineObjectId
-					if inlineObject, ok := inlineObjects[inlineObjectId]; ok {
+					inlineObjectID := paragraphElement.InlineObjectElement.InlineObjectId
+					if inlineObject, ok := inlineObjects[inlineObjectID]; ok {
 						uri := inlineObject.InlineObjectProperties.EmbeddedObject.ImageProperties.ContentUri
 						result += fmt.Sprintf("![%v](%v)\n", inlineObject.InlineObjectProperties.EmbeddedObject.Description, uri)
 					} else {

@@ -10,10 +10,11 @@ import (
 	"time"
 )
 
+//CrawlP2s crawls P2 documents updated last week
 func CrawlP2s(wg *sync.WaitGroup, gdrive *drive.Service, dropboxClient *dropy.Client) {
 	defer wg.Done()
 
-	oneDayEarlier := time.Now().Add(-1 * 24 * time.Hour)
+	oneDayEarlier := time.Now().Add(-7 * 24 * time.Hour)
 	query := fmt.Sprintf("name contains 'Prod2' and modifiedTime > '%v'",
 		oneDayEarlier.Format("2006-01-02T15:04:05"))
 
